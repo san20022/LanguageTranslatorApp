@@ -1,112 +1,142 @@
-#!/usr/bin/env node
+import { useState } from 'react';
+import {
+  Alert,
+  Button,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
-/**
- * This script is used to reset the project to a blank state.
- * It deletes or moves the /app, /components, /hooks, /scripts, and /constants directories to /app-example based on user input and creates a new /app directory with an index.tsx and _layout.tsx file.
- * You can remove the `reset-project` script from package.json and safely delete this file after running it.
- */
+export default function App() {
+  const [text, setText] = useState("");
+  const [translated, setTranslated] = useState("");
+  const [language, setLanguage] = useState("Spanish");
+  const [history, setHistory] = useState([]);
 
-const fs = require("fs");
-const path = require("path");
-const readline = require("readline");
+  const translateToSpanish = (input) => input + " (traducido al español)";
+  const translateToFrench = (input) => input + " (traduit en français)";
+  const translateToGerman = (input) => input + " (ins Deutsche übersetzt)";
+  const translateToItalian = (input) => input + " (tradotto in italiano)";
+  const translateToJapanese = (input) => input + " (日本語に翻訳されました)";
+  const translateToKorean = (input) => input + " (한국어로 번역됨)";
+  const translateToPortuguese = (input) => input + " (traduzido para português)";
 
-const root = process.cwd();
-const oldDirs = ["app", "components", "hooks", "constants", "scripts"];
-const exampleDir = "app-example";
-const newAppDir = "app";
-const exampleDirPath = path.join(root, exampleDir);
+  const translateText = () => {
+    if (text.trim() === "") {
+      Alert.alert("Input required", "Please enter some text to translate.");
+      return;
+    }
 
-const indexContent = `import { Text, View } from "react-native";
+    let result = "";
+    switch (language) {
+      case "Spanish": result = translateToSpanish(text); break;
+      case "French": result = translateToFrench(text); break;
+      case "German": result = translateToGerman(text); break;
+      case "Italian": result = translateToItalian(text); break;
+      case "Japanese": result = translateToJapanese(text); break;
+      case "Korean": result = translateToKorean(text); break;
+      case "Portuguese": result = translateToPortuguese(text); break;
+      default: result = text;
+    }
 
-export default function Index() {
+    setTranslated(result);
+    setHistory([{ input: text, language, result }, ...history]);
+  };
+
+  const clearAll = () => {
+    setText("");
+    setTranslated("");
+  };
+
+  const languages = [
+    { name: "Spanish", flag: "🇪🇸" },
+    { name: "French", flag: "🇫🇷" },
+    { name: "German", flag: "🇩🇪" },
+    { name: "Italian", flag: "🇮🇹" },
+    { name: "Japanese", flag: "🇯🇵" },
+    { name: "Korean", flag: "🇰🇷" },
+    { name: "Portuguese", flag: "🇵🇹" }
+  ];
+
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-    </View>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>🌐 Language Translator</Text>
+      <Image
+        source={{ uri: "https://cdn-icons-png.flaticon.com/512/3898/3898150.png" }}
+        style={styles.image}
+      />
+      <Text style={styles.description}>
+        Enter text below and select a language to simulate translation.
+      </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Type your text here..."
+        onChangeText={setText}
+        value={text}
+      />
+      <Text style={styles.subtitle}>Select Language:</Text>
+      <View style={styles.languageContainer}>
+        {languages.map((lang) => (
+          <TouchableOpacity
+            key={lang.name}
+            style={[
+              styles.languageButton,
+              language === lang.name && styles.selectedButton
+            ]}
+            onPress={() => setLanguage(lang.name)}
+          >
+            <Text style={styles.languageText}>{lang.flag} {lang.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <Text style={styles.selectedLanguage}>Selected: {language}</Text>
+      <View style={styles.buttonRow}>
+        <Button title="Translate" onPress={translateText} />
+        <Button title="Clear" color="red" onPress={clearAll} />
+      </View>
+      <View style={styles.resultBox}>
+        <Text style={styles.resultTitle}>Translation Result:</Text>
+        <Text style={styles.resultText}>{translated}</Text>
+      </View>
+      <View style={styles.historyBox}>
+        <Text style={styles.historyTitle}>History:</Text>
+        {history.length === 0 && <Text style={styles.historyItem}>No translations yet</Text>}
+        {history.map((item, index) => (
+          <View key={index} style={styles.historyItemBox}>
+            <Text style={styles.historyItem}>
+              {item.input} → {item.result} ({item.language})
+            </Text>
+          </View>
+        ))}
+      </View>
+      <Text style={styles.footer}>💡 This app is for simulation purposes only</Text>
+    </ScrollView>
   );
 }
-`;
 
-const layoutContent = `import { Stack } from "expo-router";
-
-export default function RootLayout() {
-  return <Stack />;
-}
-`;
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
+const styles = StyleSheet.create({
+  container: { flexGrow: 1, backgroundColor: '#f4f4f4', alignItems: 'center', justifyContent: 'flex-start', padding: 25 },
+  title: { fontSize: 32, fontWeight: 'bold', marginBottom: 15, textAlign: 'center' },
+  description: { textAlign: 'center', fontSize: 16, marginBottom: 20 },
+  subtitle: { fontSize: 18, marginBottom: 10, fontWeight: 'bold' },
+  image: { width: 120, height: 120, marginBottom: 20 },
+  input: { borderWidth: 1, borderColor: '#999', width: '100%', padding: 12, marginBottom: 15, backgroundColor: 'white', borderRadius: 5 },
+  languageContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginBottom: 15 },
+  languageButton: { backgroundColor: '#007AFF', padding: 10, margin: 5, borderRadius: 5 },
+  selectedButton: { backgroundColor: '#0047AB' },
+  languageText: { color: 'white', fontWeight: 'bold' },
+  selectedLanguage: { fontSize: 16, marginBottom: 15 },
+  buttonRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 15 },
+  resultBox: { width: '100%', backgroundColor: 'white', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#ddd', marginBottom: 15 },
+  resultTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
+  resultText: { fontSize: 16 },
+  historyBox: { width: '100%', marginTop: 10, padding: 10, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#ccc', marginBottom: 20 },
+  historyTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
+  historyItemBox: { marginBottom: 5 },
+  historyItem: { fontSize: 14, color: '#333' },
+  footer: { fontSize: 12, color: '#777', textAlign: 'center', marginTop: 20 }
 });
-
-const moveDirectories = async (userInput) => {
-  try {
-    if (userInput === "y") {
-      // Create the app-example directory
-      await fs.promises.mkdir(exampleDirPath, { recursive: true });
-      console.log(`📁 /${exampleDir} directory created.`);
-    }
-
-    // Move old directories to new app-example directory or delete them
-    for (const dir of oldDirs) {
-      const oldDirPath = path.join(root, dir);
-      if (fs.existsSync(oldDirPath)) {
-        if (userInput === "y") {
-          const newDirPath = path.join(root, exampleDir, dir);
-          await fs.promises.rename(oldDirPath, newDirPath);
-          console.log(`➡️ /${dir} moved to /${exampleDir}/${dir}.`);
-        } else {
-          await fs.promises.rm(oldDirPath, { recursive: true, force: true });
-          console.log(`❌ /${dir} deleted.`);
-        }
-      } else {
-        console.log(`➡️ /${dir} does not exist, skipping.`);
-      }
-    }
-
-    // Create new /app directory
-    const newAppDirPath = path.join(root, newAppDir);
-    await fs.promises.mkdir(newAppDirPath, { recursive: true });
-    console.log("\n📁 New /app directory created.");
-
-    // Create index.tsx
-    const indexPath = path.join(newAppDirPath, "index.tsx");
-    await fs.promises.writeFile(indexPath, indexContent);
-    console.log("📄 app/index.tsx created.");
-
-    // Create _layout.tsx
-    const layoutPath = path.join(newAppDirPath, "_layout.tsx");
-    await fs.promises.writeFile(layoutPath, layoutContent);
-    console.log("📄 app/_layout.tsx created.");
-
-    console.log("\n✅ Project reset complete. Next steps:");
-    console.log(
-      `1. Run \`npx expo start\` to start a development server.\n2. Edit app/index.tsx to edit the main screen.${
-        userInput === "y"
-          ? `\n3. Delete the /${exampleDir} directory when you're done referencing it.`
-          : ""
-      }`
-    );
-  } catch (error) {
-    console.error(`❌ Error during script execution: ${error.message}`);
-  }
-};
-
-rl.question(
-  "Do you want to move existing files to /app-example instead of deleting them? (Y/n): ",
-  (answer) => {
-    const userInput = answer.trim().toLowerCase() || "y";
-    if (userInput === "y" || userInput === "n") {
-      moveDirectories(userInput).finally(() => rl.close());
-    } else {
-      console.log("❌ Invalid input. Please enter 'Y' or 'N'.");
-      rl.close();
-    }
-  }
-);
